@@ -6,13 +6,18 @@ from rest_framework import status
 class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        # Adaptamos la respuesta al formato que espera la app Kotlin
+        
+        # Lógica para asegurar que los superusuarios siempre sean ADMIN en la app
+        user_role = self.user.role
+        if self.user.is_staff or self.user.is_superuser:
+            user_role = "ADMIN"
+            
         return {
             "token": data["access"],
             "user": {
                 "id": self.user.id,
                 "username": self.user.username,
-                "role": getattr(self.user, 'role', 'CLIENT')
+                "role": user_role
             }
         }
 
