@@ -7,13 +7,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        # 1. Registro público
+        # El registro es público
         if self.action == 'create':
             return [permissions.AllowAny()]
         
-        # 2. Solo el Admin puede ver la lista de todos los usuarios (CRUD)
-        if self.action == 'list':
+        # Para listar, actualizar o eliminar, debe ser Administrador (Staff)
+        if self.action in ['list', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAdminUser()]
         
-        # 3. Para ver su propio perfil (retrieve) o editarlo, deben estar logueados
+        # Para ver perfil propio
         return [permissions.IsAuthenticated()]
