@@ -55,7 +55,6 @@ jobs:
           DB_PORT:       5432
           TEST_DB_NAME:  shopapi_test_db
           CORS_ALLOW_ALL_ORIGINS: True
-        # Se remueve 'store' para que Django testee de manera global o añade tu app real ('rental')
         run: uv run python manage.py test --verbosity=2
 
   # ── Job 2: Deploy ─────────────────────────────────────────
@@ -78,12 +77,14 @@ jobs:
 
       - name: Deploy to VM
         env:
-          VPS_HOST:    ${{ secrets.VPS_HOST }}
-          VPS_USER:    ${{ secrets.VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USERNAME }}
         run: |
-          # Pasamos explícitamente el DEPLOY_PATH corregido al entorno de SSH remoto
           ssh $VPS_USER@$VPS_HOST DEPLOY_PATH="/home/Cami123/alquiler_autos/alquiler_de_autos_backend_benavidez" 'bash -s' << 'ENDSSH'
             set -e
+
+            # Mapa explícito para que SSH encuentre las herramientas de tu usuario
+            export PATH="/home/Cami123/.local/bin:$PATH"
 
             echo "── 1. Actualizando código ──"
             cd "$DEPLOY_PATH"
@@ -109,7 +110,6 @@ jobs:
 
             echo "── 7. Verificando salud de la API ──"
             sleep 3
-            # Probamos apuntando a la administración pública que sabemos que existe por defecto
             curl -sf http://127.0.0.1/admin/ && echo "API OK" || echo "API ERROR"
 
             echo "Despliegue completado exitosamente"
