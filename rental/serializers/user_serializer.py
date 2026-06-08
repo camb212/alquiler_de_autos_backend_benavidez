@@ -11,18 +11,23 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        # Forzamos que la app vea "ADMIN" si el usuario tiene permisos de staff
         if instance.is_staff or instance.is_superuser:
             ret['role'] = "ADMIN"
         return ret
 
     def create(self, validated_data):
+        request = self.context.get('request')
+        # Solo si quien crea es admin, permitimos asignar el rol ADMIN
+        is_request_from_admin = request and request.user and (request.user.is_staff or request.user.is_superuser)
+        
         role = validated_data.get('role', 'CLIENT')
         password = validated_data.pop('password', None)
         
-        # Si el rol es ADMIN, le damos permisos de staff
-        if role == "ADMIN":
+        if role == "ADMIN" and is_request_from_admin:
             validated_data['is_staff'] = True
+        else:
+            validated_data['is_staff'] = False
+            validated_data['role'] = 'CLIENT'
             
         user = User.objects.create_user(**validated_data)
         if password:
@@ -31,11 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        request = self.context.get('request')
+        is_request_from_admin = request and request.user and (request.user.is_staff or request.user.is_superuser)
+        
         role = validated_data.get('role')
         password = validated_data.pop('password', None)
 
-        if role:
+        # Solo un admin puede cambiar roles
+        if is_request_from_admin and role:
             instance.is_staff = (role == "ADMIN")
+            instance.role = role
         
         if password:
             instance.set_password(password)
