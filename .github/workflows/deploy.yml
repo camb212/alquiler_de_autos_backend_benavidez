@@ -1,7 +1,7 @@
 - name: Deploy to VM
         env:
-          VPS_HOST:    ${{ secrets.VPS_HOST }}
-          VPS_USER:    ${{ secrets.VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USERNAME }}
         run: |
           ssh $VPS_USER@$VPS_HOST DEPLOY_PATH="/home/Cami123/alquiler_autos/alquiler_de_autos_backend_benavidez" 'bash -s' << 'ENDSSH'
             set -e
